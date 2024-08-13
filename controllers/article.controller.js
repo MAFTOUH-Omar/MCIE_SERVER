@@ -140,7 +140,31 @@ const ArticleController = {
                 res.status(500).json({ message: 'حدث خطأ أثناء تحديث الصورة' });
             }
         });
-    }
+    },
+
+    delete: async (req, res) => {
+        const { id } = req.params;
+
+        try {
+            const article = await Article.findById(id);
+            if (!article) {
+                return res.status(404).json({ message: 'المقالة غير موجودة' });
+            }
+
+            if (article.image) {
+                const imagePath = path.join(__dirname, '..', article.image);
+                fs.unlink(imagePath, (err) => {
+                    if (err) console.error('Erreur lors de la suppression de l\'image:', err);
+                });
+            }
+
+            await article.remove();
+
+            res.status(200).json({ message: 'تم حذف المقالة بنجاح' });
+        } catch (err) {
+            res.status(500).json({ message: 'حدث خطأ أثناء حذف المقالة' });
+        }
+    },
 };
 
 module.exports = ArticleController;
