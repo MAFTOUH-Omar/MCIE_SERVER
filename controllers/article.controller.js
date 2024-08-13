@@ -5,22 +5,29 @@ const upload = require('../config/multerConfig');
 
 const ArticleController = {
     create: async (req, res) => {
-        const { title, image, category_id, content, author_id } = req.body;
+        upload.single('image')(req, res, async (err) => {
+            if (err) {
+                return res.status(500).json({ message: 'حدث خطأ أثناء تحميل الصورة' });
+            }
 
-        try {
-            const newArticle = new Article({
-                title,
-                image,
-                category_id,
-                content,
-                author_id,
-            });
+            try {
+                const { title , category_id , content , author_id } = req.body;
+                const image = req.file ? req.file.filename : null;
 
-            await newArticle.save();
-            res.status(201).json({ message: 'تم إنشاء المقالة بنجاح', article: newArticle });
-        } catch (err) {
-            res.status(500).json({ message: 'حدث خطأ أثناء إنشاء المقالة' });
-        }
+                const newArticle = new Article({
+                    title,
+                    image,
+                    category_id,
+                    content,
+                    author_id,
+                });
+
+                await newArticle.save();
+                res.status(201).json({ message: 'تم إنشاء المقالة بنجاح', article: newArticle });
+            } catch (err) {
+                res.status(500).json({ message: 'حدث خطأ أثناء إنشاء المقالة' });
+            }
+        });
     },
 
     show: async (req, res) => {
