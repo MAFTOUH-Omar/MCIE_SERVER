@@ -6,6 +6,7 @@ const seminarSchema = new mongoose.Schema({
     image: { type: String },
     date: { type: Date, required: true },
     location: { type: String },
+    publish : {type: Boolean , default: true} ,
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now }
 });

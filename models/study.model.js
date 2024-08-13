@@ -6,6 +6,7 @@ const studySchema = new mongoose.Schema({
     image: { type: String },
     related_resources: [{ type: String }],
     author_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    publish : {type: Boolean , default: true} ,
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now }
 });

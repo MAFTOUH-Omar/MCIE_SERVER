@@ -5,6 +5,7 @@ const publicationSchema = new mongoose.Schema({
     content: { type: String, required: true },
     image: { type: String },
     author_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    publish : {type: Boolean , default: true} ,
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now }
 });
