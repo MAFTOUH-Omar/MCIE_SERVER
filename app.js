@@ -4,6 +4,14 @@ const bodyParser = require('body-parser')
 const path = require('path');
 const db = require("./config/db");
 const cors = require('cors');
+// Routes
+const ActivityRoute = require('./routes/activity.route');
+const ArticleRoute = require('./routes/article.route');
+const CategoryRoute = require('./routes/category.route');
+const DialogRoute = require('./routes/dialog.route');
+const PublicationRoute = require('./routes/publication.route');
+const SeminarRoute = require('./routes/seminar.route');
+const StudyRoute = require('./routes/study.route');
 
 app.use(cors());
 app.use(express.json());
@@ -14,6 +22,15 @@ app.use(bodyParser.json())
 app.get('/', (req, res) => {
     res.send('MCIE API PAGE HOME');
 });
+
+// Route V1
+app.use('/api/v1/activity', ActivityRoute);
+app.use('/api/v1/article', ArticleRoute);
+app.use('/api/v1/category', CategoryRoute);
+app.use('/api/v1/dialog', DialogRoute);
+app.use('/api/v1/publication', PublicationRoute);
+app.use('/api/v1/seminar', SeminarRoute);
+app.use('/api/v1/study', StudyRoute);
 
 //Not Found Routes
 app.use("*", (req, res) => {

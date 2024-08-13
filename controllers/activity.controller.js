@@ -1,31 +1,29 @@
 const Activity = require('../models/activity.model');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
 
 const ActivityController = {
     create: async (req, res) => {
-        upload.single('image')(req, res, async (err) => {
-            if (err) {
-                return res.status(500).json({ message: 'حدث خطأ أثناء تحميل الصورة' });
+        try {
+            const { title, description, activity_type } = req.body;
+            const image = req.file ? req.file.filename : null;
+
+            const activity = new Activity({
+                title,
+                description,
+                activity_type
+            });
+
+            if (image) {
+                activity.image = `picture/activity/${image}`;
             }
 
-            try {
-                const { title, description, activity_type } = req.body;
-                const image = req.file ? req.file.filename : null;
+            await activity.save();
 
-                const activity = new Activity({
-                    title,
-                    description,
-                    image,
-                    activity_type
-                });
-
-                await activity.save();
-                res.status(201).json({ message: 'تم إنشاء النشاط بنجاح', activity });
-            } catch (err) {
-                res.status(500).json({ message: 'حدث خطأ أثناء إنشاء النشاط' });
-            }
-        });
+            res.status(201).json({ message: 'تم إنشاء النشاط بنجاح', activity });
+        } catch (err) {
+            res.status(500).json({ message: 'حدث خطأ أثناء إنشاء النشاط' , err});
+        }
     },
 
     show: async (req, res) => {
@@ -112,27 +110,27 @@ const ActivityController = {
     },
 
     updateImage: async (req, res) => {
-        const { id } = req.params;
-
         try {
+            const { id } = req.params;
+            const image = req.file ? req.file.filename : null;
+    
             const activity = await Activity.findById(id);
             if (!activity) {
                 return res.status(404).json({ message: 'النشاط غير موجود' });
             }
-
-            if (activity.image && fs.existsSync(path.join(__dirname, '../pictures/', activity.image))) {
-                fs.unlinkSync(path.join(__dirname, '../pictures/', activity.image));
+    
+            if (image) {
+                activity.image = `picture/activity/${image}`;
             }
-
-            activity.image = req.file ? req.file.filename : activity.image;
+    
             activity.updated_at = Date.now();
-
+    
             await activity.save();
             res.status(200).json({ message: 'تم تحديث صورة النشاط بنجاح', activity });
         } catch (err) {
             res.status(500).json({ message: 'حدث خطأ أثناء تحديث صورة النشاط' });
         }
-    },
+    },    
 
     delete: async (req, res) => {
         const { id } = req.params;
@@ -142,14 +140,18 @@ const ActivityController = {
             if (!activity) {
                 return res.status(404).json({ message: 'النشاط غير موجود' });
             }
-
-            if (activity.image && fs.existsSync(path.join(__dirname, '../pictures/', activity.image))) {
-                fs.unlinkSync(path.join(__dirname, '../pictures/', activity.image));
+    
+            const imagePath = activity.image ? path.join(__dirname, '..', 'pictures/activity', path.basename(activity.image)) : null;
+    
+            if (imagePath && fs.existsSync(imagePath)) {
+                fs.unlinkSync(imagePath);
             }
-
-            await activity.remove();
+    
+            await Activity.findByIdAndDelete(id);
+    
             res.status(200).json({ message: 'تم حذف النشاط بنجاح' });
         } catch (err) {
+            console.error(err);
             res.status(500).json({ message: 'حدث خطأ أثناء حذف النشاط' });
         }
     }
