@@ -1,0 +1,85 @@
+[{
+  "_id": {
+    "$oid": "66bc0366f5eb8575731a25e4"
+  },
+  "title": "ندوة حول الذكاء الاصطناعي",
+  "description": "ندوة لتبادل المعرفة حول أحدث تقنيات الذكاء الاصطناعي.",
+  "publish": true,
+  "activity_type": "ندوة",
+  "created_at": {
+    "$date": "2024-08-14T01:07:50.959Z"
+  },
+  "updated_at": {
+    "$date": "2024-08-14T01:08:18.907Z"
+  },
+  "__v": 0,
+  "image": "picture/activity/1723597698803-372646711.jpeg"
+},
+{
+  "_id": {
+    "$oid": "66bc0434f5eb8575731a25e8"
+  },
+  "title": "ورشة عمل عن البرمجة",
+  "description": "ورشة تفاعلية لتعليم أساسيات البرمجة للأطفال",
+  "publish": true,
+  "activity_type": "ورشة عمل",
+  "created_at": {
+    "$date": "2024-08-14T01:11:16.039Z"
+  },
+  "updated_at": {
+    "$date": "2024-08-14T01:11:16.039Z"
+  },
+  "image": "picture/activity/1723597876035-209604674.jpeg",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "66bc04b3f5eb8575731a25ea"
+  },
+  "title": "معرض الكتاب السنوي",
+  "description": "معرض يجمع دور النشر لعرض أحدث الكتب والروايات",
+  "publish": true,
+  "activity_type": "معرض",
+  "created_at": {
+    "$date": "2024-08-14T01:13:23.345Z"
+  },
+  "updated_at": {
+    "$date": "2024-08-14T01:13:23.345Z"
+  },
+  "image": "picture/activity/1723598003341-647851564.jpeg",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "66bc057ef5eb8575731a25ec"
+  },
+  "title": "محاضرة عن الصحة النفسية",
+  "description": "محاضرة توعوية حول أهمية الصحة النفسية وطرق الحفاظ عليه",
+  "publish": true,
+  "activity_type": "محاضرة",
+  "created_at": {
+    "$date": "2024-08-14T01:16:46.862Z"
+  },
+  "updated_at": {
+    "$date": "2024-08-14T01:16:46.862Z"
+  },
+  "image": "picture/activity/1723598206860-117648310.jpeg",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "66bc05c9f5eb8575731a25ee"
+  },
+  "title": "حفل تكريم المتفوقين",
+  "description": "حفل لتكريم الطلاب المتفوقين في مختلف المجالات الدراسية",
+  "publish": true,
+  "activity_type": "حفل",
+  "created_at": {
+    "$date": "2024-08-14T01:18:01.340Z"
+  },
+  "updated_at": {
+    "$date": "2024-08-14T01:18:01.340Z"
+  },
+  "image": "picture/activity/1723598281336-958089865.jpeg",
+  "__v": 0
+}]
