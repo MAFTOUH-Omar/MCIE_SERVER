@@ -12,11 +12,14 @@ const DialogRoute = require('./routes/dialog.route');
 const PublicationRoute = require('./routes/publication.route');
 const SeminarRoute = require('./routes/seminar.route');
 const StudyRoute = require('./routes/study.route');
+// middleware rate limit 
+const rateLimiter = require('./middlewares/rateLimiter');
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json())
+app.use(rateLimiter);
 
 // main
 app.get('/', (req, res) => {
@@ -31,6 +34,7 @@ app.use('/api/v1/dialog', DialogRoute);
 app.use('/api/v1/publication', PublicationRoute);
 app.use('/api/v1/seminar', SeminarRoute);
 app.use('/api/v1/study', StudyRoute);
+app.use("/api/v1/image/", express.static(path.join(__dirname, "")));
 
 //Not Found Routes
 app.use("*", (req, res) => {
