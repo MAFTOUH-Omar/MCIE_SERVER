@@ -1,33 +1,29 @@
 const Seminar = require('../models/seminar.model');
 const path = require('path');
 const fs = require('fs');
-const upload = require('../config/multerConfig');
 
 const SeminarController = {
     create: async (req, res) => {
-        upload(req, res, async (err) => {
-            if (err) {
-                return res.status(500).json({ message: 'حدث خطأ أثناء تحميل الصورة' });
+        try {
+            const { title, description, date, location } = req.body;
+            const image = req.file ? req.file.filename : null;
+
+            const seminar = new Seminar({
+                title,
+                description,
+                date,
+                location,
+            });
+
+            if (image) {
+                seminar.image = `picture/seminar/${image}`;
             }
 
-            try {
-                const { title, description, date, location } = req.body;
-                const image = req.file ? req.file.filename : null;
-
-                const seminar = new Seminar({
-                    title,
-                    description,
-                    image,
-                    date,
-                    location
-                });
-
-                await seminar.save();
-                res.status(201).json({ message: 'تم إنشاء الندوة بنجاح', seminar });
-            } catch (err) {
-                res.status(500).json({ message: 'حدث خطأ أثناء إنشاء الندوة' });
-            }
-        });
+            await seminar.save();
+            res.status(201).json({ message: 'تم إنشاء الندوة بنجاح', seminar });
+        } catch (err) {
+            res.status(500).json({ message: 'حدث خطأ أثناء إنشاء الندوة', err });
+        }
     },
 
     show: async (req, res) => {
@@ -35,7 +31,7 @@ const SeminarController = {
             const seminars = await Seminar.find();
             res.status(200).json(seminars);
         } catch (err) {
-            res.status(500).json({ message: 'حدث خطأ أثناء عرض الندوات' });
+            res.status(500).json({ message: 'حدث خطأ أثناء عرض الندوات', err });
         }
     },
 
@@ -48,7 +44,7 @@ const SeminarController = {
             }
             res.status(200).json(seminar);
         } catch (err) {
-            res.status(500).json({ message: 'حدث خطأ أثناء عرض الندوة' });
+            res.status(500).json({ message: 'حدث خطأ أثناء عرض الندوة', err });
         }
     },
 
@@ -72,7 +68,7 @@ const SeminarController = {
             await seminar.save();
             res.status(200).json({ message: 'تم تحديث الندوة بنجاح', seminar });
         } catch (err) {
-            res.status(500).json({ message: 'حدث خطأ أثناء تحديث الندوة' });
+            res.status(500).json({ message: 'حدث خطأ أثناء تحديث الندوة', err });
         }
     },
 
@@ -91,7 +87,7 @@ const SeminarController = {
             await seminar.save();
             res.status(200).json({ message: 'تم نشر الندوة بنجاح', seminar });
         } catch (err) {
-            res.status(500).json({ message: 'حدث خطأ أثناء نشر الندوة' });
+            res.status(500).json({ message: 'حدث خطأ أثناء نشر الندوة', err });
         }
     },
 
@@ -110,58 +106,62 @@ const SeminarController = {
             await seminar.save();
             res.status(200).json({ message: 'تم إخفاء الندوة بنجاح', seminar });
         } catch (err) {
-            res.status(500).json({ message: 'حدث خطأ أثناء إخفاء الندوة' });
+            res.status(500).json({ message: 'حدث خطأ أثناء إخفاء الندوة', err });
         }
     },
 
     updateImage: async (req, res) => {
-        const { id } = req.params;
+        try {
+            const { id } = req.params;
+            const image = req.file ? req.file.filename : null;
 
-        upload(req, res, async (err) => {
-            if (err) {
-                return res.status(500).json({ message: 'حدث خطأ أثناء تحميل الصورة' });
+            const seminar = await Seminar.findById(id);
+            if (!seminar) {
+                return res.status(404).json({ message: 'الندوة غير موجودة' });
             }
 
-            try {
-                const seminar = await Seminar.findById(id);
-                if (!seminar) {
-                    return res.status(404).json({ message: 'الندوة غير موجودة' });
+            if (seminar.image) {
+                const oldImagePath = path.join(__dirname, '..', 'picture/seminar', path.basename(seminar.image));
+                if (fs.existsSync(oldImagePath)) {
+                    fs.unlinkSync(oldImagePath);
                 }
-
-                if (seminar.image && fs.existsSync(path.join(__dirname, '../publication/', seminar.image))) {
-                    fs.unlinkSync(path.join(__dirname, '../publication', seminar.image));
-                }
-
-                seminar.image = req.file ? req.file.filename : seminar.image;
-                seminar.updated_at = Date.now();
-
-                await seminar.save();
-                res.status(200).json({ message: 'تم تحديث صورة الندوة بنجاح', seminar });
-            } catch (err) {
-                res.status(500).json({ message: 'حدث خطأ أثناء تحديث صورة الندوة' });
             }
-        });
+
+            if (image) {
+                seminar.image = `picture/seminar/${image}`;
+            } else {
+                seminar.image = "";
+            }
+
+            seminar.updated_at = Date.now();
+            await seminar.save();
+            res.status(200).json({ message: 'تم تحديث صورة الندوة بنجاح', seminar });
+        } catch (err) {
+            res.status(500).json({ message: 'حدث خطأ أثناء تحديث صورة الندوة', err });
+        }
     },
 
     delete: async (req, res) => {
         const { id } = req.params;
-
         try {
             const seminar = await Seminar.findById(id);
             if (!seminar) {
                 return res.status(404).json({ message: 'الندوة غير موجودة' });
             }
 
-            if (seminar.image && fs.existsSync(path.join(__dirname, '../publication/', seminar.image))) {
-                fs.unlinkSync(path.join(__dirname, '../publication/', seminar.image));
+            const imagePath = seminar.image ? path.join(__dirname, '..', 'picture/seminar', path.basename(seminar.image)) : null;
+
+            if (imagePath && fs.existsSync(imagePath)) {
+                fs.unlinkSync(imagePath);
             }
 
-            await seminar.remove();
+            await Seminar.findByIdAndDelete(id);
+
             res.status(200).json({ message: 'تم حذف الندوة بنجاح' });
         } catch (err) {
-            res.status(500).json({ message: 'حدث خطأ أثناء حذف الندوة' });
+            res.status(500).json({ message: 'حدث خطأ أثناء حذف الندوة', err });
         }
-    }
+    }    
 };
 
 module.exports = SeminarController;

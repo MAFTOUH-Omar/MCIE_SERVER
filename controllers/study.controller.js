@@ -1,33 +1,29 @@
 const Study = require('../models/study.model');
 const path = require('path');
 const fs = require('fs');
-const upload = require('../config/multerConfig');
 
 const StudyController = {
     create: async (req, res) => {
-        upload(req, res, async (err) => {
-            if (err) {
-                return res.status(500).json({ message: 'حدث خطأ أثناء تحميل الصورة' });
+        try {
+            const { title, description, related_resources, author_id } = req.body;
+            const image = req.file ? req.file.filename : null;
+
+            const study = new Study({
+                title,
+                description,
+                related_resources: related_resources,
+                author_id
+            });
+
+            if (image) {
+                study.image = `picture/study/${image}`;
             }
 
-            try {
-                const { title, description, related_resources, author_id } = req.body;
-                const image = req.file ? req.file.filename : null;
-
-                const study = new Study({
-                    title,
-                    description,
-                    image,
-                    related_resources: JSON.parse(related_resources),
-                    author_id
-                });
-
-                await study.save();
-                res.status(201).json({ message: 'تم إنشاء الدراسة بنجاح', study });
-            } catch (err) {
-                res.status(500).json({ message: 'حدث خطأ أثناء إنشاء الدراسة' });
-            }
-        });
+            await study.save();
+            res.status(201).json({ message: 'تم إنشاء الدراسة بنجاح', study });
+        } catch (err) {
+            res.status(500).json({ message: 'حدث خطأ أثناء إنشاء الدراسة', err });
+        }
     },
 
     show: async (req, res) => {
@@ -35,7 +31,7 @@ const StudyController = {
             const studies = await Study.find();
             res.status(200).json(studies);
         } catch (err) {
-            res.status(500).json({ message: 'حدث خطأ أثناء عرض الدراسات' });
+            res.status(500).json({ message: 'حدث خطأ أثناء عرض الدراسات', err });
         }
     },
 
@@ -48,7 +44,7 @@ const StudyController = {
             }
             res.status(200).json(study);
         } catch (err) {
-            res.status(500).json({ message: 'حدث خطأ أثناء عرض الدراسة' });
+            res.status(500).json({ message: 'حدث خطأ أثناء عرض الدراسة', err });
         }
     },
 
@@ -72,7 +68,7 @@ const StudyController = {
             await study.save();
             res.status(200).json({ message: 'تم تحديث الدراسة بنجاح', study });
         } catch (err) {
-            res.status(500).json({ message: 'حدث خطأ أثناء تحديث الدراسة' });
+            res.status(500).json({ message: 'حدث خطأ أثناء تحديث الدراسة', err });
         }
     },
 
@@ -91,7 +87,7 @@ const StudyController = {
             await study.save();
             res.status(200).json({ message: 'تم نشر الدراسة بنجاح', study });
         } catch (err) {
-            res.status(500).json({ message: 'حدث خطأ أثناء نشر الدراسة' });
+            res.status(500).json({ message: 'حدث خطأ أثناء نشر الدراسة', err });
         }
     },
 
@@ -110,56 +106,59 @@ const StudyController = {
             await study.save();
             res.status(200).json({ message: 'تم إخفاء الدراسة بنجاح', study });
         } catch (err) {
-            res.status(500).json({ message: 'حدث خطأ أثناء إخفاء الدراسة' });
+            res.status(500).json({ message: 'حدث خطأ أثناء إخفاء الدراسة', err });
         }
     },
 
     updateImage: async (req, res) => {
-        const { id } = req.params;
+        try {
+            const { id } = req.params;
+            const image = req.file ? req.file.filename : null;
 
-        upload(req, res, async (err) => {
-            if (err) {
-                return res.status(500).json({ message: 'حدث خطأ أثناء تحميل الصورة' });
+            const study = await Study.findById(id);
+            if (!study) {
+                return res.status(404).json({ message: 'الدراسة غير موجودة' });
             }
 
-            try {
-                const study = await Study.findById(id);
-                if (!study) {
-                    return res.status(404).json({ message: 'الدراسة غير موجودة' });
+            if (study.image) {
+                const oldImagePath = path.join(__dirname, '..', 'picture/study/', path.basename(study.image));
+                if (fs.existsSync(oldImagePath)) {
+                    fs.unlinkSync(oldImagePath);
                 }
-
-                if (study.image && fs.existsSync(path.join(__dirname, '../publication/', study.image))) {
-                    fs.unlinkSync(path.join(__dirname, '../publication/', study.image));
-                }
-
-                study.image = req.file ? req.file.filename : study.image;
-                study.updated_at = Date.now();
-
-                await study.save();
-                res.status(200).json({ message: 'تم تحديث صورة الدراسة بنجاح', study });
-            } catch (err) {
-                res.status(500).json({ message: 'حدث خطأ أثناء تحديث صورة الدراسة' });
             }
-        });
+
+            if (image) {
+                study.image = `picture/study/${image}`;
+            } else {
+                study.image = "";
+            }
+
+            study.updated_at = Date.now();
+            await study.save();
+            res.status(200).json({ message: 'تم تحديث صورة الدراسة بنجاح', study });
+        } catch (err) {
+            res.status(500).json({ message: 'حدث خطأ أثناء تحديث صورة الدراسة', err });
+        }
     },
 
     delete: async (req, res) => {
         const { id } = req.params;
-
         try {
             const study = await Study.findById(id);
             if (!study) {
                 return res.status(404).json({ message: 'الدراسة غير موجودة' });
             }
 
-            if (study.image && fs.existsSync(path.join(__dirname, '../publication/', study.image))) {
-                fs.unlinkSync(path.join(__dirname, '../publication/', study.image));
+            const imagePath = study.image ? path.join(__dirname, '..', 'picture/study/', path.basename(study.image)) : null;
+
+            if (imagePath && fs.existsSync(imagePath)) {
+                fs.unlinkSync(imagePath);
             }
 
-            await study.remove();
+            await Study.findByIdAndDelete(id);
             res.status(200).json({ message: 'تم حذف الدراسة بنجاح' });
         } catch (err) {
-            res.status(500).json({ message: 'حدث خطأ أثناء حذف الدراسة' });
+            res.status(500).json({ message: 'حدث خطأ أثناء حذف الدراسة', err });
         }
     }
 };

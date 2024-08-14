@@ -1,32 +1,28 @@
 const Publication = require('../models/publication.model');
 const path = require('path');
 const fs = require('fs');
-const upload = require('../config/multerConfig');
 
 const PublicationController = {
     create: async (req, res) => {
-        upload(req, res, async (err) => {
-            if (err) {
-                return res.status(500).json({ message: 'حدث خطأ أثناء تحميل الصورة' });
+        try {
+            const { title, content, author_id } = req.body;
+            const image = req.file ? req.file.filename : null;
+
+            const publication = new Publication({
+                title,
+                content,
+                author_id
+            });
+
+            if (image) {
+                publication.image = `picture/publication/${image}`;
             }
 
-            try {
-                const { title, content, author_id } = req.body;
-                const image = req.file ? req.file.filename : null;
-
-                const publication = new Publication({
-                    title,
-                    content,
-                    image,
-                    author_id
-                });
-
-                await publication.save();
-                res.status(201).json({ message: 'تم إنشاء النشر بنجاح', publication });
-            } catch (err) {
-                res.status(500).json({ message: 'حدث خطأ أثناء إنشاء النشر' });
-            }
-        });
+            await publication.save();
+            res.status(201).json({ message: 'تم إنشاء النشر بنجاح', publication });
+        } catch (err) {
+            res.status(500).json({ message: 'حدث خطأ أثناء إنشاء النشر', err });
+        }
     },
 
     show: async (req, res) => {
@@ -114,31 +110,30 @@ const PublicationController = {
 
     updateImage: async (req, res) => {
         const { id } = req.params;
-
-        upload(req, res, async (err) => {
-            if (err) {
-                return res.status(500).json({ message: 'حدث خطأ أثناء تحميل الصورة' });
+        try {
+            const image = req.file ? req.file.filename : null;
+            const publication = await Publication.findById(id);
+            if (!publication) {
+                return res.status(404).json({ message: 'النشر غير موجود' });
             }
 
-            try {
-                const publication = await Publication.findById(id);
-                if (!publication) {
-                    return res.status(404).json({ message: 'النشر غير موجود' });
+            if (publication.image) {
+                const oldImagePath = path.join(__dirname, '..', 'picture/publication', path.basename(publication.image));
+                if (fs.existsSync(oldImagePath)) {
+                    fs.unlinkSync(oldImagePath);
                 }
-
-                if (publication.image && fs.existsSync(path.join(__dirname, '../picture/', publication.image))) {
-                    fs.unlinkSync(path.join(__dirname, '../picture/', publication.image));
-                }
-
-                publication.image = req.file ? req.file.filename : publication.image;
-                publication.updated_at = Date.now();
-
-                await publication.save();
-                res.status(200).json({ message: 'تم تحديث صورة النشر بنجاح', publication });
-            } catch (err) {
-                res.status(500).json({ message: 'حدث خطأ أثناء تحديث صورة النشر' });
             }
-        });
+
+            if (image) {
+                publication.image = `picture/publication/${image}`;
+            }
+
+            publication.updated_at = Date.now();
+            await publication.save();
+            res.status(200).json({ message: 'تم تحديث صورة النشر بنجاح', publication });
+        } catch (err) {
+            res.status(500).json({ message: 'حدث خطأ أثناء تحديث صورة النشر' });
+        }
     },
 
     delete: async (req, res) => {
@@ -150,11 +145,14 @@ const PublicationController = {
                 return res.status(404).json({ message: 'النشر غير موجود' });
             }
 
-            if (publication.image && fs.existsSync(path.join(__dirname, '../picture/', publication.image))) {
-                fs.unlinkSync(path.join(__dirname, '../picture/', publication.image));
+            const imagePath = publication.image ? path.join(__dirname, '..', 'picture/publication', path.basename(publication.image)) : null;
+
+            if (imagePath && fs.existsSync(imagePath)) {
+                fs.unlinkSync(imagePath);
             }
 
-            await publication.remove();
+            await Publication.findByIdAndDelete(id);
+
             res.status(200).json({ message: 'تم حذف النشر بنجاح' });
         } catch (err) {
             res.status(500).json({ message: 'حدث خطأ أثناء حذف النشر' });

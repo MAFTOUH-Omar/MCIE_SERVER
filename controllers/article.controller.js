@@ -1,33 +1,28 @@
 const fs = require('fs');
 const path = require('path');
 const Article = require('../models/article.model');
-const upload = require('../config/multerConfig'); 
 
 const ArticleController = {
     create: async (req, res) => {
-        upload.single('image')(req, res, async (err) => {
-            if (err) {
-                return res.status(500).json({ message: 'حدث خطأ أثناء تحميل الصورة' });
+        try {
+            const { title , category_id , content , author_id } = req.body;
+            const image = req.file ? req.file.filename : null;
+            const newArticle = new Article({
+                title,
+                category_id,
+                content,
+                author_id,
+            });
+
+            if (image) {
+                newArticle.image = `picture/article/${image}`;
             }
 
-            try {
-                const { title , category_id , content , author_id } = req.body;
-                const image = req.file ? req.file.filename : null;
-
-                const newArticle = new Article({
-                    title,
-                    image,
-                    category_id,
-                    content,
-                    author_id,
-                });
-
-                await newArticle.save();
-                res.status(201).json({ message: 'تم إنشاء المقالة بنجاح', article: newArticle });
-            } catch (err) {
-                res.status(500).json({ message: 'حدث خطأ أثناء إنشاء المقالة' });
-            }
-        });
+            await newArticle.save();
+            res.status(201).json({ message: 'تم إنشاء المقالة بنجاح', article: newArticle });
+        } catch (err) {
+            res.status(500).json({ message: 'حدث خطأ أثناء إنشاء المقالة' , err});
+        }
     },
 
     show: async (req, res) => {
@@ -117,58 +112,58 @@ const ArticleController = {
     } ,
 
     updateImage: async (req, res) => {
-        const { id } = req.params;
-
-        upload(req, res, async function(err) {
-            if (err instanceof multer.MulterError) {
-                return res.status(500).json({ message: 'حدث خطأ أثناء تحميل الصورة' });
-            } else if (err) {
-                return res.status(400).json({ message: err.message });
-            }
-
-            try {
-                const article = await Article.findById(id);
-                if (!article) {
-                    return res.status(404).json({ message: 'المقالة غير موجودة' });
-                }
-
-                if (article.image) {
-                    const oldImagePath = path.join(__dirname, '..', article.image);
-                    fs.unlink(oldImagePath, (err) => {
-                        if (err) console.error('Erreur lors de la suppression de l\'ancienne image:', err);
-                    });
-                }
-
-                article.image = req.file.path;
-                await article.save();
-
-                res.status(200).json({ message: 'تم تحديث الصورة بنجاح', article });
-            } catch (err) {
-                res.status(500).json({ message: 'حدث خطأ أثناء تحديث الصورة' });
-            }
-        });
-    },
-
-    delete: async (req, res) => {
-        const { id } = req.params;
-
         try {
+            const { id } = req.params;
+            const newImage = req.file ? req.file.filename : null;
+    
             const article = await Article.findById(id);
+            
             if (!article) {
                 return res.status(404).json({ message: 'المقالة غير موجودة' });
             }
-
+    
             if (article.image) {
-                const imagePath = path.join(__dirname, '..', article.image);
-                fs.unlink(imagePath, (err) => {
-                    if (err) console.error('Erreur lors de la suppression de l\'image:', err);
-                });
+                const oldImagePath = path.join(__dirname, '..', 'picture/article', path.basename(article.image));
+                if (fs.existsSync(oldImagePath)) {
+                    fs.unlinkSync(oldImagePath);
+                }
             }
+    
+            if (newImage) {
+                article.image = `picture/article/${newImage}`;
+            } else {
+                article.image = "";
+            }
+    
+            await article.save();
+            res.status(200).json({ message: 'تم تحديث الصورة بنجاح', article });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ message: 'حدث خطأ أثناء تحديث الصورة' });
+        }
+    },
 
-            await article.remove();
-
+    delete: async (req, res) => {
+        try {
+            const { id } = req.params;
+    
+            const article = await Article.findById(id);
+    
+            if (!article) {
+                return res.status(404).json({ message: 'المقالة غير موجودة' });
+            }
+    
+            const imagePath = article.image ? path.join(__dirname, '..', 'picture/article', path.basename(article.image)) : null;
+    
+            if (imagePath && fs.existsSync(imagePath)) {
+                fs.unlinkSync(imagePath);
+            }
+    
+            await Article.findByIdAndDelete(id);
+    
             res.status(200).json({ message: 'تم حذف المقالة بنجاح' });
         } catch (err) {
+            console.error(err);
             res.status(500).json({ message: 'حدث خطأ أثناء حذف المقالة' });
         }
     },

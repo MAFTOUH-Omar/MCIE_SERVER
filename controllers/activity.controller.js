@@ -112,15 +112,24 @@ const ActivityController = {
     updateImage: async (req, res) => {
         try {
             const { id } = req.params;
-            const image = req.file ? req.file.filename : null;
+            const newImage = req.file ? req.file.filename : null;
     
             const activity = await Activity.findById(id);
             if (!activity) {
                 return res.status(404).json({ message: 'النشاط غير موجود' });
             }
     
-            if (image) {
-                activity.image = `picture/activity/${image}`;
+            if (activity.image) {
+                const oldImagePath = path.join(__dirname, '..', 'picture/activity', path.basename(activity.image));
+                if (fs.existsSync(oldImagePath)) {
+                    fs.unlinkSync(oldImagePath);
+                }
+            }
+    
+            if (newImage) {
+                activity.image = `picture/activity/${newImage}`;
+            } else {
+                activity.image = "";
             }
     
             activity.updated_at = Date.now();
@@ -128,20 +137,21 @@ const ActivityController = {
             await activity.save();
             res.status(200).json({ message: 'تم تحديث صورة النشاط بنجاح', activity });
         } catch (err) {
+            console.error(err);
             res.status(500).json({ message: 'حدث خطأ أثناء تحديث صورة النشاط' });
         }
-    },    
+    },  
 
     delete: async (req, res) => {
         const { id } = req.params;
-
+    
         try {
             const activity = await Activity.findById(id);
             if (!activity) {
                 return res.status(404).json({ message: 'النشاط غير موجود' });
             }
     
-            const imagePath = activity.image ? path.join(__dirname, '..', 'pictures/activity', path.basename(activity.image)) : null;
+            const imagePath = activity.image ? path.join(__dirname, '..', 'picture/activity', path.basename(activity.image)) : null;
     
             if (imagePath && fs.existsSync(imagePath)) {
                 fs.unlinkSync(imagePath);
@@ -154,7 +164,7 @@ const ActivityController = {
             console.error(err);
             res.status(500).json({ message: 'حدث خطأ أثناء حذف النشاط' });
         }
-    }
+    },
 };
 
 module.exports = ActivityController;
