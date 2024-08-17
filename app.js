@@ -13,13 +13,13 @@ const PublicationRoute = require('./routes/publication.route');
 const SeminarRoute = require('./routes/seminar.route');
 const StudyRoute = require('./routes/study.route');
 // middleware rate limit 
-const rateLimiter = require('./middlewares/rateLimiter');
+// const rateLimiter = require('./middlewares/rateLimiter');
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json())
-app.use(rateLimiter);
+// app.use(rateLimiter);
 
 // main
 app.get('/', (req, res) => {
