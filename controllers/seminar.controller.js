@@ -28,7 +28,16 @@ const SeminarController = {
 
     show: async (req, res) => {
         try {
-            const seminars = await Seminar.find();
+            const { sort = 'recent' } = req.query;
+    
+            let sortOptions = { created_at: -1 };
+            if (sort === 'recent') {
+                sortOptions = { created_at: -1 };
+            } else if (sort === 'older') {
+                sortOptions = { created_at: 1 };
+            }
+
+            const seminars = await Seminar.find().sort(sortOptions);
             res.status(200).json(seminars);
         } catch (err) {
             res.status(500).json({ message: 'حدث خطأ أثناء عرض الندوات', err });

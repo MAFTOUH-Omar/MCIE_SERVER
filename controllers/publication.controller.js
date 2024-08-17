@@ -27,7 +27,16 @@ const PublicationController = {
 
     show: async (req, res) => {
         try {
-            const publications = await Publication.find();
+            const { sort = 'recent' } = req.query;
+    
+            let sortOptions = { created_at: -1 };
+            if (sort === 'recent') {
+                sortOptions = { created_at: -1 };
+            } else if (sort === 'older') {
+                sortOptions = { created_at: 1 };
+            }
+
+            const publications = await Publication.find().sort(sortOptions);
             res.status(200).json(publications);
         } catch (err) {
             res.status(500).json({ message: 'حدث خطأ أثناء عرض المنشورات' });

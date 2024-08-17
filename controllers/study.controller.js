@@ -28,7 +28,16 @@ const StudyController = {
 
     show: async (req, res) => {
         try {
-            const studies = await Study.find();
+            const { sort = 'recent' } = req.query;
+    
+            let sortOptions = { created_at: -1 };
+            if (sort === 'recent') {
+                sortOptions = { created_at: -1 };
+            } else if (sort === 'older') {
+                sortOptions = { created_at: 1 };
+            }
+    
+            const studies = await Study.find().sort(sortOptions);
             res.status(200).json(studies);
         } catch (err) {
             res.status(500).json({ message: 'حدث خطأ أثناء عرض الدراسات', err });

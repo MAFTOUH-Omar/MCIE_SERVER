@@ -27,7 +27,16 @@ const ArticleController = {
 
     show: async (req, res) => {
         try {
-            const articles = await Article.find().populate('category_id').populate('author_id');
+            const { sort = 'recent' } = req.query;
+    
+            let sortOptions = { created_at: -1 };
+            if (sort === 'recent') {
+                sortOptions = { created_at: -1 };
+            } else if (sort === 'older') {
+                sortOptions = { created_at: 1 };
+            }
+            
+            const articles = await Article.find().populate('category_id').populate('author_id').sort(sortOptions);
             res.status(200).json({ message: 'تم استرجاع المقالات بنجاح', articles });
         } catch (err) {
             res.status(500).json({ message: 'حدث خطأ أثناء استرجاع المقالات' });
